@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/insurance
+    username: insurance_user
+    password: insurance_pass
+
+  jpa:
+    show-sql: true
