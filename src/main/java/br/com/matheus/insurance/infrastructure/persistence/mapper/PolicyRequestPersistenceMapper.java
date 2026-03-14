@@ -6,6 +6,7 @@ import br.com.matheus.insurance.infrastructure.persistence.entity.PolicyRequestH
 import br.com.matheus.insurance.infrastructure.persistence.entity.PolicyRequestJpaEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -41,19 +42,25 @@ public class PolicyRequestPersistenceMapper {
     }
 
     public PolicyRequest toDomain(PolicyRequestJpaEntity entity) {
-        PolicyRequest domain = new PolicyRequest(
+        List<PolicyHistoryEntry> history = entity.getHistory().stream()
+                .map(item -> new PolicyHistoryEntry(item.getStatus(), item.getChangedAt()))
+                .toList();
+
+        return PolicyRequest.restore(
                 entity.getId(),
                 entity.getCustomerId(),
                 entity.getProductId(),
                 entity.getCategory(),
                 entity.getSalesChannel(),
                 entity.getPaymentMethod(),
+                entity.getStatus(),
+                entity.getCreatedAt(),
+                entity.getFinishedAt(),
                 entity.getTotalMonthlyPremiumAmount(),
                 entity.getInsuredAmount(),
                 entity.getCoverages(),
-                entity.getAssistances()
+                entity.getAssistances(),
+                history
         );
-
-        return domain;
     }
 }
