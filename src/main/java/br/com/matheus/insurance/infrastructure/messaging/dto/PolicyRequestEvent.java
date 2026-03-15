@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record PolicyRequestEvent(
+        UUID eventId,
         UUID requestId,
         UUID customerId,
         PolicyRequestStatus status,

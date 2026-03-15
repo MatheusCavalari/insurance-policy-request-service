@@ -1,8 +1,9 @@
 package br.com.matheus.insurance.domain.port;
 
-import br.com.matheus.insurance.domain.model.PolicyRequest;
+import br.com.matheus.insurance.domain.enums.OutboxEventType;
+
+import java.util.concurrent.CompletableFuture;
 
 public interface PolicyEventPublisher {
-    void publishReceived(PolicyRequest policyRequest);
-    void publishStatusChanged(PolicyRequest policyRequest);
+    CompletableFuture<Void> publish(OutboxEventType eventType, String payload);
 }

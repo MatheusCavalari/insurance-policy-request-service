@@ -19,3 +19,5 @@ app:
     sqs:
       underwriting-queue: underwriting-processed-queue
       payment-queue: payment-processed-queue
+      policy-request-received-queue: policy-request-received-queue
+      policy-status-changed-queue: policy-status-changed-queue
