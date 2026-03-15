@@ -5,6 +5,7 @@ import br.com.matheus.insurance.application.dto.CreatePolicyRequestResult;
 import br.com.matheus.insurance.domain.enums.PolicyRequestStatus;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
+import br.com.matheus.insurance.infrastructure.messaging.OutboxEventFactory;
 import br.com.matheus.insurance.support.PolicyRequestTestFactory;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -17,7 +18,9 @@ class CreatePolicyRequestServiceTest {
     @Test
     void should_create_and_persist_policy_request() {
         PolicyRequestRepository repository = mock(PolicyRequestRepository.class);
-        CreatePolicyRequestService service = new CreatePolicyRequestService(repository);
+        OutboxEventFactory outboxEventFactory = mock(OutboxEventFactory.class);
+
+        CreatePolicyRequestService service = new CreatePolicyRequestService(repository, outboxEventFactory);
 
         CreatePolicyRequestCommand command = PolicyRequestTestFactory.newCreateCommand();
 
@@ -41,5 +44,8 @@ class CreatePolicyRequestServiceTest {
         assertEquals(command.salesChannel(), saved.getSalesChannel());
         assertEquals(command.paymentMethod(), saved.getPaymentMethod());
         assertEquals(PolicyRequestStatus.RECEIVED, saved.getStatus());
+
+        verify(outboxEventFactory, times(1))
+                .appendPolicyRequestReceived(any(PolicyRequest.class), any());
     }
 }

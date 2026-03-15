@@ -3,6 +3,7 @@ package br.com.matheus.insurance.application.service;
 import br.com.matheus.insurance.domain.enums.PolicyRequestStatus;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
+import br.com.matheus.insurance.infrastructure.messaging.OutboxEventFactory;
 import br.com.matheus.insurance.support.PolicyRequestTestFactory;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -18,7 +19,9 @@ class CancelPolicyRequestServiceTest {
     @Test
     void should_cancel_received_policy_request() {
         PolicyRequestRepository repository = mock(PolicyRequestRepository.class);
-        CancelPolicyRequestService service = new CancelPolicyRequestService(repository);
+        OutboxEventFactory outboxEventFactory = mock(OutboxEventFactory.class);
+
+        CancelPolicyRequestService service = new CancelPolicyRequestService(repository, outboxEventFactory);
 
         PolicyRequest request = PolicyRequestTestFactory.newPolicyRequest();
 
@@ -34,12 +37,17 @@ class CancelPolicyRequestServiceTest {
 
         assertEquals(PolicyRequestStatus.CANCELED, saved.getStatus());
         assertNotNull(saved.getFinishedAt());
+
+        verify(outboxEventFactory, times(1))
+                .appendPolicyStatusChanged(any(PolicyRequest.class), any());
     }
 
     @Test
     void should_cancel_pending_policy_request() {
         PolicyRequestRepository repository = mock(PolicyRequestRepository.class);
-        CancelPolicyRequestService service = new CancelPolicyRequestService(repository);
+        OutboxEventFactory outboxEventFactory = mock(OutboxEventFactory.class);
+
+        CancelPolicyRequestService service = new CancelPolicyRequestService(repository, outboxEventFactory);
 
         PolicyRequest request = PolicyRequestTestFactory.restoredPendingPolicyRequest();
 
@@ -56,12 +64,17 @@ class CancelPolicyRequestServiceTest {
         assertEquals(PolicyRequestStatus.CANCELED, saved.getStatus());
         assertEquals(4, saved.getHistory().size());
         assertEquals(PolicyRequestStatus.CANCELED, saved.getHistory().get(3).status());
+
+        verify(outboxEventFactory, times(1))
+                .appendPolicyStatusChanged(any(PolicyRequest.class), any());
     }
 
     @Test
     void should_fail_when_canceling_approved_policy_request() {
         PolicyRequestRepository repository = mock(PolicyRequestRepository.class);
-        CancelPolicyRequestService service = new CancelPolicyRequestService(repository);
+        OutboxEventFactory outboxEventFactory = mock(OutboxEventFactory.class);
+
+        CancelPolicyRequestService service = new CancelPolicyRequestService(repository, outboxEventFactory);
 
         PolicyRequest request = PolicyRequestTestFactory.restoredApprovedPolicyRequest();
 
@@ -70,12 +83,15 @@ class CancelPolicyRequestServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.execute(request.getId()));
 
         verify(repository, never()).save(any());
+        verifyNoInteractions(outboxEventFactory);
     }
 
     @Test
     void should_throw_when_policy_request_does_not_exist() {
         PolicyRequestRepository repository = mock(PolicyRequestRepository.class);
-        CancelPolicyRequestService service = new CancelPolicyRequestService(repository);
+        OutboxEventFactory outboxEventFactory = mock(OutboxEventFactory.class);
+
+        CancelPolicyRequestService service = new CancelPolicyRequestService(repository, outboxEventFactory);
 
         UUID id = UUID.randomUUID();
 
@@ -84,5 +100,6 @@ class CancelPolicyRequestServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.execute(id));
 
         verify(repository, never()).save(any());
+        verifyNoInteractions(outboxEventFactory);
     }
 }

@@ -1,5 +1,6 @@
 package br.com.matheus.insurance.application.service;
 
+import br.com.matheus.insurance.domain.enums.PolicyCategory;
 import br.com.matheus.insurance.domain.enums.PolicyRequestStatus;
 import br.com.matheus.insurance.domain.enums.RiskClassification;
 import br.com.matheus.insurance.domain.model.FraudAnalysis;
@@ -7,6 +8,7 @@ import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.FraudAnalysisGateway;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
 import br.com.matheus.insurance.domain.rule.*;
+import br.com.matheus.insurance.infrastructure.messaging.OutboxEventFactory;
 import br.com.matheus.insurance.support.PolicyRequestTestFactory;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -26,6 +28,7 @@ class AnalyzePolicyRequestServiceTest {
     void should_validate_and_move_to_pending_when_rule_is_approved() {
         PolicyRequestRepository repository = mock(PolicyRequestRepository.class);
         FraudAnalysisGateway fraudAnalysisGateway = mock(FraudAnalysisGateway.class);
+        OutboxEventFactory outboxEventFactory = mock(OutboxEventFactory.class);
 
         RiskValidationStrategyFactory factory = new RiskValidationStrategyFactory(
                 List.of(
@@ -37,7 +40,7 @@ class AnalyzePolicyRequestServiceTest {
         );
 
         AnalyzePolicyRequestService service =
-                new AnalyzePolicyRequestService(repository, fraudAnalysisGateway, factory);
+                new AnalyzePolicyRequestService(repository, fraudAnalysisGateway, factory, outboxEventFactory);
 
         PolicyRequest request = PolicyRequestTestFactory.newPolicyRequest();
 
@@ -66,12 +69,16 @@ class AnalyzePolicyRequestServiceTest {
         assertEquals(PolicyRequestStatus.VALIDATED, saved.getHistory().get(1).status());
         assertEquals(PolicyRequestStatus.PENDING, saved.getHistory().get(2).status());
         assertNull(saved.getFinishedAt());
+
+        verify(outboxEventFactory, times(2))
+                .appendPolicyStatusChanged(any(PolicyRequest.class), any(Instant.class));
     }
 
     @Test
     void should_reject_when_rule_is_not_approved() {
         PolicyRequestRepository repository = mock(PolicyRequestRepository.class);
         FraudAnalysisGateway fraudAnalysisGateway = mock(FraudAnalysisGateway.class);
+        OutboxEventFactory outboxEventFactory = mock(OutboxEventFactory.class);
 
         RiskValidationStrategyFactory factory = new RiskValidationStrategyFactory(
                 List.of(
@@ -83,10 +90,10 @@ class AnalyzePolicyRequestServiceTest {
         );
 
         AnalyzePolicyRequestService service =
-                new AnalyzePolicyRequestService(repository, fraudAnalysisGateway, factory);
+                new AnalyzePolicyRequestService(repository, fraudAnalysisGateway, factory, outboxEventFactory);
 
         PolicyRequest request = PolicyRequestTestFactory.newPolicyRequest(
-                br.com.matheus.insurance.domain.enums.PolicyCategory.AUTO,
+                PolicyCategory.AUTO,
                 new BigDecimal("100000.00")
         );
 
@@ -113,19 +120,23 @@ class AnalyzePolicyRequestServiceTest {
         assertEquals(2, saved.getHistory().size());
         assertEquals(PolicyRequestStatus.REJECTED, saved.getHistory().get(1).status());
         assertNotNull(saved.getFinishedAt());
+
+        verify(outboxEventFactory, times(1))
+                .appendPolicyStatusChanged(any(PolicyRequest.class), any(Instant.class));
     }
 
     @Test
     void should_throw_when_policy_request_does_not_exist() {
         PolicyRequestRepository repository = mock(PolicyRequestRepository.class);
         FraudAnalysisGateway fraudAnalysisGateway = mock(FraudAnalysisGateway.class);
+        OutboxEventFactory outboxEventFactory = mock(OutboxEventFactory.class);
 
         RiskValidationStrategyFactory factory = new RiskValidationStrategyFactory(
                 List.of(new RegularRiskValidationStrategy())
         );
 
         AnalyzePolicyRequestService service =
-                new AnalyzePolicyRequestService(repository, fraudAnalysisGateway, factory);
+                new AnalyzePolicyRequestService(repository, fraudAnalysisGateway, factory, outboxEventFactory);
 
         UUID id = UUID.randomUUID();
 
@@ -135,5 +146,6 @@ class AnalyzePolicyRequestServiceTest {
 
         verify(repository, never()).save(any());
         verifyNoInteractions(fraudAnalysisGateway);
+        verifyNoInteractions(outboxEventFactory);
     }
 }
