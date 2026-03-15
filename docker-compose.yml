@@ -51,10 +51,13 @@ services:
       wiremock:
         condition: service_started
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/insurance
       SPRING_DATASOURCE_USERNAME: insurance_user
       SPRING_DATASOURCE_PASSWORD: insurance_pass
-      SPRING_PROFILES_ACTIVE: local
+      FRAUD_BASE_URL: http://wiremock:8080
+      AWS_ENDPOINT: http://localstack:4566
+      AWS_REGION: us-east-1
     ports:
       - "8080:8080"
 

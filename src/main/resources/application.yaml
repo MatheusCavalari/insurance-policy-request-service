@@ -35,3 +35,16 @@ logging:
   level:
     org.springframework: INFO
     org.hibernate.SQL: INFO
+
+fraud:
+  base-url: http://localhost:8089
+
+app:
+  aws:
+    endpoint: http://localhost:4566
+    region: us-east-1
+    access-key: test
+    secret-key: test
+    sqs:
+      payment-queue: payment-processed-queue
+      underwriting-queue: underwriting-processed-queue

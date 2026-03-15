@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/insurance
+    url: jdbc:postgresql://postgres:5432/insurance
     username: insurance_user
     password: insurance_pass
 
@@ -8,11 +8,11 @@ spring:
     show-sql: true
 
 fraud:
-  base-url: http://localhost:8089
+  base-url: http://wiremock:8080
 
 app:
   aws:
-    endpoint: http://localhost:4566
+    endpoint: http://localstack:4566
     region: us-east-1
     access-key: test
     secret-key: test
