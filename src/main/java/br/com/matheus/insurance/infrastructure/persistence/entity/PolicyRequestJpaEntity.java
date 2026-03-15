@@ -1,19 +1,11 @@
 package br.com.matheus.insurance.infrastructure.persistence.entity;
 
+import br.com.matheus.insurance.domain.enums.ExternalProcessStatus;
 import br.com.matheus.insurance.domain.enums.PaymentMethod;
 import br.com.matheus.insurance.domain.enums.PolicyCategory;
 import br.com.matheus.insurance.domain.enums.PolicyRequestStatus;
 import br.com.matheus.insurance.domain.enums.SalesChannel;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -73,6 +65,14 @@ public class PolicyRequestJpaEntity {
     @Column(columnDefinition = "jsonb", nullable = false)
     private List<String> assistances;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", nullable = false)
+    private ExternalProcessStatus paymentStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "underwriting_status", nullable = false)
+    private ExternalProcessStatus underwritingStatus;
+
     @OneToMany(mappedBy = "policyRequest", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("changedAt asc")
     private List<PolicyRequestHistoryJpaEntity> history = new ArrayList<>();
@@ -80,115 +80,51 @@ public class PolicyRequestJpaEntity {
     public PolicyRequestJpaEntity() {
     }
 
-    public UUID getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public UUID getCustomerId() { return customerId; }
+    public void setCustomerId(UUID customerId) { this.customerId = customerId; }
 
-    public UUID getCustomerId() {
-        return customerId;
-    }
+    public Long getProductId() { return productId; }
+    public void setProductId(Long productId) { this.productId = productId; }
 
-    public void setCustomerId(UUID customerId) {
-        this.customerId = customerId;
-    }
+    public PolicyCategory getCategory() { return category; }
+    public void setCategory(PolicyCategory category) { this.category = category; }
 
-    public Long getProductId() {
-        return productId;
-    }
+    public SalesChannel getSalesChannel() { return salesChannel; }
+    public void setSalesChannel(SalesChannel salesChannel) { this.salesChannel = salesChannel; }
 
-    public void setProductId(Long productId) {
-        this.productId = productId;
-    }
+    public PaymentMethod getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
 
-    public PolicyCategory getCategory() {
-        return category;
-    }
+    public PolicyRequestStatus getStatus() { return status; }
+    public void setStatus(PolicyRequestStatus status) { this.status = status; }
 
-    public void setCategory(PolicyCategory category) {
-        this.category = category;
-    }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
-    public SalesChannel getSalesChannel() {
-        return salesChannel;
-    }
+    public Instant getFinishedAt() { return finishedAt; }
+    public void setFinishedAt(Instant finishedAt) { this.finishedAt = finishedAt; }
 
-    public void setSalesChannel(SalesChannel salesChannel) {
-        this.salesChannel = salesChannel;
-    }
+    public BigDecimal getTotalMonthlyPremiumAmount() { return totalMonthlyPremiumAmount; }
+    public void setTotalMonthlyPremiumAmount(BigDecimal totalMonthlyPremiumAmount) { this.totalMonthlyPremiumAmount = totalMonthlyPremiumAmount; }
 
-    public PaymentMethod getPaymentMethod() {
-        return paymentMethod;
-    }
+    public BigDecimal getInsuredAmount() { return insuredAmount; }
+    public void setInsuredAmount(BigDecimal insuredAmount) { this.insuredAmount = insuredAmount; }
 
-    public void setPaymentMethod(PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
+    public Map<String, BigDecimal> getCoverages() { return coverages; }
+    public void setCoverages(Map<String, BigDecimal> coverages) { this.coverages = coverages; }
 
-    public PolicyRequestStatus getStatus() {
-        return status;
-    }
+    public List<String> getAssistances() { return assistances; }
+    public void setAssistances(List<String> assistances) { this.assistances = assistances; }
 
-    public void setStatus(PolicyRequestStatus status) {
-        this.status = status;
-    }
+    public ExternalProcessStatus getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(ExternalProcessStatus paymentStatus) { this.paymentStatus = paymentStatus; }
 
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
+    public ExternalProcessStatus getUnderwritingStatus() { return underwritingStatus; }
+    public void setUnderwritingStatus(ExternalProcessStatus underwritingStatus) { this.underwritingStatus = underwritingStatus; }
 
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getFinishedAt() {
-        return finishedAt;
-    }
-
-    public void setFinishedAt(Instant finishedAt) {
-        this.finishedAt = finishedAt;
-    }
-
-    public BigDecimal getTotalMonthlyPremiumAmount() {
-        return totalMonthlyPremiumAmount;
-    }
-
-    public void setTotalMonthlyPremiumAmount(BigDecimal totalMonthlyPremiumAmount) {
-        this.totalMonthlyPremiumAmount = totalMonthlyPremiumAmount;
-    }
-
-    public BigDecimal getInsuredAmount() {
-        return insuredAmount;
-    }
-
-    public void setInsuredAmount(BigDecimal insuredAmount) {
-        this.insuredAmount = insuredAmount;
-    }
-
-    public Map<String, BigDecimal> getCoverages() {
-        return coverages;
-    }
-
-    public void setCoverages(Map<String, BigDecimal> coverages) {
-        this.coverages = coverages;
-    }
-
-    public List<String> getAssistances() {
-        return assistances;
-    }
-
-    public void setAssistances(List<String> assistances) {
-        this.assistances = assistances;
-    }
-
-    public List<PolicyRequestHistoryJpaEntity> getHistory() {
-        return history;
-    }
-
-    public void setHistory(List<PolicyRequestHistoryJpaEntity> history) {
-        this.history = history;
-    }
+    public List<PolicyRequestHistoryJpaEntity> getHistory() { return history; }
+    public void setHistory(List<PolicyRequestHistoryJpaEntity> history) { this.history = history; }
 }
