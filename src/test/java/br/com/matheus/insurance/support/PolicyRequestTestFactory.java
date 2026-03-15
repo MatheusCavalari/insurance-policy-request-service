@@ -1,10 +1,7 @@
 package br.com.matheus.insurance.support;
 
 import br.com.matheus.insurance.application.dto.CreatePolicyRequestCommand;
-import br.com.matheus.insurance.domain.enums.PaymentMethod;
-import br.com.matheus.insurance.domain.enums.PolicyCategory;
-import br.com.matheus.insurance.domain.enums.PolicyRequestStatus;
-import br.com.matheus.insurance.domain.enums.SalesChannel;
+import br.com.matheus.insurance.domain.enums.*;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.valueobject.PolicyHistoryEntry;
 
@@ -48,9 +45,7 @@ public final class PolicyRequestTestFactory {
                 PaymentMethod.CREDIT_CARD,
                 new BigDecimal("75.25"),
                 insuredAmount,
-                Map.of(
-                        "Cobertura Básica", insuredAmount
-                ),
+                Map.of("Cobertura Básica", insuredAmount),
                 List.of("Guincho 24h"),
                 Instant.parse("2026-03-14T10:00:00Z")
         );
@@ -75,7 +70,59 @@ public final class PolicyRequestTestFactory {
                         new PolicyHistoryEntry(PolicyRequestStatus.RECEIVED, Instant.parse("2026-03-14T10:00:00Z")),
                         new PolicyHistoryEntry(PolicyRequestStatus.VALIDATED, Instant.parse("2026-03-14T10:00:10Z")),
                         new PolicyHistoryEntry(PolicyRequestStatus.PENDING, Instant.parse("2026-03-14T10:00:20Z"))
-                )
+                ),
+                ExternalProcessStatus.PENDING,
+                ExternalProcessStatus.PENDING
+        );
+    }
+
+    public static PolicyRequest restoredPendingWithPaymentApproved() {
+        return PolicyRequest.restore(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                UUID.fromString("22222222-2222-2222-2222-222222222222"),
+                123L,
+                PolicyCategory.AUTO,
+                SalesChannel.MOBILE,
+                PaymentMethod.CREDIT_CARD,
+                PolicyRequestStatus.PENDING,
+                Instant.parse("2026-03-14T10:00:00Z"),
+                null,
+                new BigDecimal("75.25"),
+                new BigDecimal("200000.00"),
+                Map.of("Cobertura Básica", new BigDecimal("200000.00")),
+                List.of("Guincho 24h"),
+                List.of(
+                        new PolicyHistoryEntry(PolicyRequestStatus.RECEIVED, Instant.parse("2026-03-14T10:00:00Z")),
+                        new PolicyHistoryEntry(PolicyRequestStatus.VALIDATED, Instant.parse("2026-03-14T10:00:10Z")),
+                        new PolicyHistoryEntry(PolicyRequestStatus.PENDING, Instant.parse("2026-03-14T10:00:20Z"))
+                ),
+                ExternalProcessStatus.APPROVED,
+                ExternalProcessStatus.PENDING
+        );
+    }
+
+    public static PolicyRequest restoredPendingWithUnderwritingApproved() {
+        return PolicyRequest.restore(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                UUID.fromString("22222222-2222-2222-2222-222222222222"),
+                123L,
+                PolicyCategory.AUTO,
+                SalesChannel.MOBILE,
+                PaymentMethod.CREDIT_CARD,
+                PolicyRequestStatus.PENDING,
+                Instant.parse("2026-03-14T10:00:00Z"),
+                null,
+                new BigDecimal("75.25"),
+                new BigDecimal("200000.00"),
+                Map.of("Cobertura Básica", new BigDecimal("200000.00")),
+                List.of("Guincho 24h"),
+                List.of(
+                        new PolicyHistoryEntry(PolicyRequestStatus.RECEIVED, Instant.parse("2026-03-14T10:00:00Z")),
+                        new PolicyHistoryEntry(PolicyRequestStatus.VALIDATED, Instant.parse("2026-03-14T10:00:10Z")),
+                        new PolicyHistoryEntry(PolicyRequestStatus.PENDING, Instant.parse("2026-03-14T10:00:20Z"))
+                ),
+                ExternalProcessStatus.PENDING,
+                ExternalProcessStatus.APPROVED
         );
     }
 
@@ -99,7 +146,9 @@ public final class PolicyRequestTestFactory {
                         new PolicyHistoryEntry(PolicyRequestStatus.VALIDATED, Instant.parse("2026-03-14T10:00:10Z")),
                         new PolicyHistoryEntry(PolicyRequestStatus.PENDING, Instant.parse("2026-03-14T10:00:20Z")),
                         new PolicyHistoryEntry(PolicyRequestStatus.APPROVED, Instant.parse("2026-03-14T10:01:00Z"))
-                )
+                ),
+                ExternalProcessStatus.APPROVED,
+                ExternalProcessStatus.APPROVED
         );
     }
 
