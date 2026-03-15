@@ -149,6 +149,23 @@ public class PolicyRequest {
         this.finishedAt = now;
     }
 
+    public void reconcileAsyncStatus(Instant now) {
+        if (this.paymentStatus == br.com.matheus.insurance.domain.enums.ExternalProcessStatus.DENIED
+                || this.underwritingStatus == br.com.matheus.insurance.domain.enums.ExternalProcessStatus.DENIED) {
+            if (!isFinalStatus()) {
+                markRejected(now);
+            }
+            return;
+        }
+
+        if (this.paymentStatus == br.com.matheus.insurance.domain.enums.ExternalProcessStatus.APPROVED
+                && this.underwritingStatus == br.com.matheus.insurance.domain.enums.ExternalProcessStatus.APPROVED) {
+            if (!isFinalStatus()) {
+                markApproved(now);
+            }
+        }
+    }
+
     public void markPaymentApproved() {
         this.paymentStatus = ExternalProcessStatus.APPROVED;
     }

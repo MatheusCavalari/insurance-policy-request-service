@@ -4,6 +4,7 @@ import br.com.matheus.insurance.application.usecase.CancelPolicyRequestUseCase;
 import br.com.matheus.insurance.domain.enums.PolicyRequestStatus;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
+import br.com.matheus.insurance.infrastructure.messaging.OutboxEventFactory;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -11,9 +12,14 @@ import java.util.UUID;
 public class CancelPolicyRequestService implements CancelPolicyRequestUseCase {
 
     private final PolicyRequestRepository repository;
+    private final OutboxEventFactory outboxEventFactory;
 
-    public CancelPolicyRequestService(PolicyRequestRepository repository) {
+    public CancelPolicyRequestService(
+            PolicyRequestRepository repository,
+            OutboxEventFactory outboxEventFactory
+    ) {
         this.repository = repository;
+        this.outboxEventFactory = outboxEventFactory;
     }
 
     @Override
@@ -26,7 +32,9 @@ public class CancelPolicyRequestService implements CancelPolicyRequestUseCase {
             throw new IllegalArgumentException("policy request cannot be canceled");
         }
 
-        policyRequest.cancel(Instant.now());
+        Instant now = Instant.now();
+        policyRequest.cancel(now);
         repository.save(policyRequest);
+        outboxEventFactory.appendPolicyStatusChanged(policyRequest, now);
     }
 }

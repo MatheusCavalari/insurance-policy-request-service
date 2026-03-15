@@ -5,6 +5,7 @@ import br.com.matheus.insurance.application.dto.CreatePolicyRequestResult;
 import br.com.matheus.insurance.application.usecase.CreatePolicyRequestUseCase;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
+import br.com.matheus.insurance.infrastructure.messaging.OutboxEventFactory;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -12,9 +13,14 @@ import java.util.UUID;
 public class CreatePolicyRequestService implements CreatePolicyRequestUseCase {
 
     private final PolicyRequestRepository repository;
+    private final OutboxEventFactory outboxEventFactory;
 
-    public CreatePolicyRequestService(PolicyRequestRepository repository) {
+    public CreatePolicyRequestService(
+            PolicyRequestRepository repository,
+            OutboxEventFactory outboxEventFactory
+    ) {
         this.repository = repository;
+        this.outboxEventFactory = outboxEventFactory;
     }
 
     @Override
@@ -36,6 +42,7 @@ public class CreatePolicyRequestService implements CreatePolicyRequestUseCase {
         );
 
         PolicyRequest saved = repository.save(policyRequest);
+        outboxEventFactory.appendPolicyRequestReceived(saved, now);
 
         return new CreatePolicyRequestResult(
                 saved.getId(),
