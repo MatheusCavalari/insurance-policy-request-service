@@ -1,5 +1,6 @@
 package br.com.matheus.insurance.domain.model;
 
+import br.com.matheus.insurance.domain.enums.ExternalProcessStatus;
 import br.com.matheus.insurance.domain.enums.PaymentMethod;
 import br.com.matheus.insurance.domain.enums.PolicyCategory;
 import br.com.matheus.insurance.domain.enums.PolicyRequestStatus;
@@ -47,6 +48,8 @@ public class PolicyRequest {
     private Map<String, BigDecimal> coverages;
     private List<String> assistances;
     private List<PolicyHistoryEntry> history;
+    private ExternalProcessStatus paymentStatus;
+    private ExternalProcessStatus underwritingStatus;
 
     private PolicyRequest() {
     }
@@ -77,6 +80,9 @@ public class PolicyRequest {
         request.assistances = new ArrayList<>(assistances);
         request.status = PolicyRequestStatus.RECEIVED;
         request.createdAt = createdAt;
+        request.finishedAt = null;
+        request.paymentStatus = ExternalProcessStatus.PENDING;
+        request.underwritingStatus = ExternalProcessStatus.PENDING;
         request.history = new ArrayList<>();
         request.history.add(new PolicyHistoryEntry(PolicyRequestStatus.RECEIVED, createdAt));
         return request;
@@ -96,7 +102,9 @@ public class PolicyRequest {
             BigDecimal insuredAmount,
             Map<String, BigDecimal> coverages,
             List<String> assistances,
-            List<PolicyHistoryEntry> history
+            List<PolicyHistoryEntry> history,
+            ExternalProcessStatus paymentStatus,
+            ExternalProcessStatus underwritingStatus
     ) {
         PolicyRequest request = new PolicyRequest();
         request.id = id;
@@ -113,6 +121,8 @@ public class PolicyRequest {
         request.coverages = new LinkedHashMap<>(coverages);
         request.assistances = new ArrayList<>(assistances);
         request.history = new ArrayList<>(history);
+        request.paymentStatus = paymentStatus;
+        request.underwritingStatus = underwritingStatus;
         return request;
     }
 
@@ -139,6 +149,30 @@ public class PolicyRequest {
         this.finishedAt = now;
     }
 
+    public void markPaymentApproved() {
+        this.paymentStatus = ExternalProcessStatus.APPROVED;
+    }
+
+    public void markPaymentDenied() {
+        this.paymentStatus = ExternalProcessStatus.DENIED;
+    }
+
+    public void markUnderwritingApproved() {
+        this.underwritingStatus = ExternalProcessStatus.APPROVED;
+    }
+
+    public void markUnderwritingDenied() {
+        this.underwritingStatus = ExternalProcessStatus.DENIED;
+    }
+
+    public boolean isPaymentApproved() {
+        return this.paymentStatus == ExternalProcessStatus.APPROVED;
+    }
+
+    public boolean isUnderwritingApproved() {
+        return this.underwritingStatus == ExternalProcessStatus.APPROVED;
+    }
+
     private void transitionTo(PolicyRequestStatus newStatus, Instant now) {
         Set<PolicyRequestStatus> allowed = ALLOWED_TRANSITIONS.getOrDefault(this.status, Set.of());
         if (!allowed.contains(newStatus)) {
@@ -157,18 +191,67 @@ public class PolicyRequest {
                 || status == PolicyRequestStatus.CANCELED;
     }
 
-    public UUID getId() { return id; }
-    public UUID getCustomerId() { return customerId; }
-    public Long getProductId() { return productId; }
-    public PolicyCategory getCategory() { return category; }
-    public SalesChannel getSalesChannel() { return salesChannel; }
-    public PaymentMethod getPaymentMethod() { return paymentMethod; }
-    public PolicyRequestStatus getStatus() { return status; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getFinishedAt() { return finishedAt; }
-    public BigDecimal getTotalMonthlyPremiumAmount() { return totalMonthlyPremiumAmount; }
-    public BigDecimal getInsuredAmount() { return insuredAmount; }
-    public Map<String, BigDecimal> getCoverages() { return Collections.unmodifiableMap(coverages); }
-    public List<String> getAssistances() { return Collections.unmodifiableList(assistances); }
-    public List<PolicyHistoryEntry> getHistory() { return Collections.unmodifiableList(history); }
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getCustomerId() {
+        return customerId;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public PolicyCategory getCategory() {
+        return category;
+    }
+
+    public SalesChannel getSalesChannel() {
+        return salesChannel;
+    }
+
+    public PaymentMethod getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public PolicyRequestStatus getStatus() {
+        return status;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getFinishedAt() {
+        return finishedAt;
+    }
+
+    public BigDecimal getTotalMonthlyPremiumAmount() {
+        return totalMonthlyPremiumAmount;
+    }
+
+    public BigDecimal getInsuredAmount() {
+        return insuredAmount;
+    }
+
+    public Map<String, BigDecimal> getCoverages() {
+        return Collections.unmodifiableMap(coverages);
+    }
+
+    public List<String> getAssistances() {
+        return Collections.unmodifiableList(assistances);
+    }
+
+    public List<PolicyHistoryEntry> getHistory() {
+        return Collections.unmodifiableList(history);
+    }
+
+    public ExternalProcessStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public ExternalProcessStatus getUnderwritingStatus() {
+        return underwritingStatus;
+    }
 }

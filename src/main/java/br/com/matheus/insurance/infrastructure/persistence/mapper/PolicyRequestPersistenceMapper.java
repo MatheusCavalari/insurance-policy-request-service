@@ -27,6 +27,8 @@ public class PolicyRequestPersistenceMapper {
         entity.setInsuredAmount(domain.getInsuredAmount());
         entity.setCoverages(domain.getCoverages());
         entity.setAssistances(domain.getAssistances());
+        entity.setPaymentStatus(domain.getPaymentStatus());
+        entity.setUnderwritingStatus(domain.getUnderwritingStatus());
 
         entity.setHistory(
                 domain.getHistory().stream()
@@ -60,7 +62,9 @@ public class PolicyRequestPersistenceMapper {
                 entity.getInsuredAmount(),
                 entity.getCoverages(),
                 entity.getAssistances(),
-                history
+                history,
+                entity.getPaymentStatus(),
+                entity.getUnderwritingStatus()
         );
     }
 }
