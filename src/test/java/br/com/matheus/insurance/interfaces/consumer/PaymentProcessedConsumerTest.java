@@ -1,10 +1,12 @@
 package br.com.matheus.insurance.interfaces.consumer;
 
 import br.com.matheus.insurance.domain.enums.PolicyRequestStatus;
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
 import br.com.matheus.insurance.domain.port.ProcessedMessageRepository;
 import br.com.matheus.insurance.infrastructure.messaging.OutboxEventFactory;
+import br.com.matheus.insurance.infrastructure.messaging.SqsEventJsonReader;
 import br.com.matheus.insurance.infrastructure.messaging.dto.PaymentProcessedEvent;
 import br.com.matheus.insurance.support.PolicyRequestTestFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,6 +24,7 @@ import static org.mockito.Mockito.*;
 class PaymentProcessedConsumerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+    private final SqsEventJsonReader jsonReader = new SqsEventJsonReader(objectMapper);
 
     @Test
     void should_approve_policy_when_payment_is_approved_and_underwriting_already_approved() throws Exception {
@@ -32,7 +35,7 @@ class PaymentProcessedConsumerTest {
         when(processedMessageRepository.exists(anyString(), any(UUID.class))).thenReturn(false);
 
         PaymentProcessedConsumer consumer =
-                new PaymentProcessedConsumer(repository, processedMessageRepository, outboxEventFactory, objectMapper);
+                new PaymentProcessedConsumer(repository, processedMessageRepository, outboxEventFactory, jsonReader);
 
         PolicyRequest request = PolicyRequestTestFactory.restoredPendingWithUnderwritingApproved();
         UUID eventId = UUID.randomUUID();
@@ -71,7 +74,7 @@ class PaymentProcessedConsumerTest {
         when(processedMessageRepository.exists(anyString(), any(UUID.class))).thenReturn(false);
 
         PaymentProcessedConsumer consumer =
-                new PaymentProcessedConsumer(repository, processedMessageRepository, outboxEventFactory, objectMapper);
+                new PaymentProcessedConsumer(repository, processedMessageRepository, outboxEventFactory, jsonReader);
 
         PolicyRequest request = PolicyRequestTestFactory.restoredPendingPolicyRequest();
         UUID eventId = UUID.randomUUID();
@@ -109,7 +112,7 @@ class PaymentProcessedConsumerTest {
         when(processedMessageRepository.exists(anyString(), any(UUID.class))).thenReturn(true);
 
         PaymentProcessedConsumer consumer =
-                new PaymentProcessedConsumer(repository, processedMessageRepository, outboxEventFactory, objectMapper);
+                new PaymentProcessedConsumer(repository, processedMessageRepository, outboxEventFactory, jsonReader);
 
         consumer.consume("""
                 {
@@ -135,7 +138,7 @@ class PaymentProcessedConsumerTest {
         when(processedMessageRepository.exists(anyString(), any(UUID.class))).thenReturn(false);
 
         PaymentProcessedConsumer consumer =
-                new PaymentProcessedConsumer(repository, processedMessageRepository, outboxEventFactory, objectMapper);
+                new PaymentProcessedConsumer(repository, processedMessageRepository, outboxEventFactory, jsonReader);
 
         PolicyRequest request = PolicyRequestTestFactory.restoredApprovedPolicyRequest();
         UUID eventId = UUID.randomUUID();
@@ -167,7 +170,7 @@ class PaymentProcessedConsumerTest {
         when(processedMessageRepository.exists(anyString(), any(UUID.class))).thenReturn(false);
 
         PaymentProcessedConsumer consumer =
-                new PaymentProcessedConsumer(repository, processedMessageRepository, outboxEventFactory, objectMapper);
+                new PaymentProcessedConsumer(repository, processedMessageRepository, outboxEventFactory, jsonReader);
 
         UUID requestId = UUID.randomUUID();
         UUID eventId = UUID.randomUUID();
@@ -184,7 +187,7 @@ class PaymentProcessedConsumerTest {
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> consumer.consume(rawMessage));
         assertNotNull(exception.getCause());
-        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertTrue(exception.getCause() instanceof ResourceNotFoundException);
 
         verify(repository, never()).save(any());
         verifyNoInteractions(outboxEventFactory);

@@ -1,9 +1,11 @@
 package br.com.matheus.insurance.interfaces.consumer;
 
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
 import br.com.matheus.insurance.domain.port.ProcessedMessageRepository;
 import br.com.matheus.insurance.infrastructure.messaging.OutboxEventFactory;
+import br.com.matheus.insurance.infrastructure.messaging.SqsEventJsonReader;
 import br.com.matheus.insurance.infrastructure.messaging.dto.UnderwritingProcessedEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
@@ -21,18 +23,18 @@ public class UnderwritingProcessedConsumer {
     private final PolicyRequestRepository repository;
     private final ProcessedMessageRepository processedMessageRepository;
     private final OutboxEventFactory outboxEventFactory;
-    private final ObjectMapper objectMapper;
+    private final SqsEventJsonReader jsonReader;
 
     public UnderwritingProcessedConsumer(
             PolicyRequestRepository repository,
             ProcessedMessageRepository processedMessageRepository,
             OutboxEventFactory outboxEventFactory,
-            ObjectMapper objectMapper
+            SqsEventJsonReader objectMapper
     ) {
         this.repository = repository;
         this.processedMessageRepository = processedMessageRepository;
         this.outboxEventFactory = outboxEventFactory;
-        this.objectMapper = objectMapper;
+        this.jsonReader = objectMapper;
     }
 
     @Transactional
@@ -41,7 +43,7 @@ public class UnderwritingProcessedConsumer {
         log.info("Received raw underwriting message: {}", rawMessage);
 
         try {
-            UnderwritingProcessedEvent event = objectMapper.readValue(rawMessage, UnderwritingProcessedEvent.class);
+            UnderwritingProcessedEvent event = jsonReader.read(rawMessage, UnderwritingProcessedEvent.class);
             log.info("Parsed underwriting event: {}", event);
 
             if (processedMessageRepository.exists(CONSUMER_NAME, event.eventId())) {
@@ -50,7 +52,7 @@ public class UnderwritingProcessedConsumer {
             }
 
             PolicyRequest policyRequest = repository.findById(event.requestId())
-                    .orElseThrow(() -> new IllegalArgumentException("policy request not found: " + event.requestId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("policy request not found: " + event.requestId()));
 
             if (!policyRequest.isFinalStatus()) {
                 String normalizedStatus = event.status().trim().toUpperCase();

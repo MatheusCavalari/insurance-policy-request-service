@@ -1,9 +1,11 @@
 package br.com.matheus.insurance.interfaces.consumer;
 
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
 import br.com.matheus.insurance.domain.port.ProcessedMessageRepository;
 import br.com.matheus.insurance.infrastructure.messaging.OutboxEventFactory;
+import br.com.matheus.insurance.infrastructure.messaging.SqsEventJsonReader;
 import br.com.matheus.insurance.infrastructure.messaging.dto.PaymentProcessedEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
@@ -21,18 +23,18 @@ public class PaymentProcessedConsumer {
     private final PolicyRequestRepository repository;
     private final ProcessedMessageRepository processedMessageRepository;
     private final OutboxEventFactory outboxEventFactory;
-    private final ObjectMapper objectMapper;
+    private final SqsEventJsonReader jsonReader;
 
     public PaymentProcessedConsumer(
             PolicyRequestRepository repository,
             ProcessedMessageRepository processedMessageRepository,
             OutboxEventFactory outboxEventFactory,
-            ObjectMapper objectMapper
+            SqsEventJsonReader jsonReader
     ) {
         this.repository = repository;
         this.processedMessageRepository = processedMessageRepository;
         this.outboxEventFactory = outboxEventFactory;
-        this.objectMapper = objectMapper;
+        this.jsonReader = jsonReader;
     }
 
     @Transactional
@@ -41,7 +43,7 @@ public class PaymentProcessedConsumer {
         log.info("Received raw payment message: {}", rawMessage);
 
         try {
-            PaymentProcessedEvent event = objectMapper.readValue(rawMessage, PaymentProcessedEvent.class);
+            PaymentProcessedEvent event = jsonReader.read(rawMessage, PaymentProcessedEvent.class);
             log.info("Parsed payment event: {}", event);
 
             if (processedMessageRepository.exists(CONSUMER_NAME, event.eventId())) {
@@ -50,7 +52,7 @@ public class PaymentProcessedConsumer {
             }
 
             PolicyRequest policyRequest = repository.findById(event.requestId())
-                    .orElseThrow(() -> new IllegalArgumentException("policy request not found: " + event.requestId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("policy request not found: " + event.requestId()));
 
             if (!policyRequest.isFinalStatus()) {
                 String normalizedStatus = event.status().trim().toUpperCase();
