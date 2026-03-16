@@ -1,0 +1,381 @@
+{
+  "info": {
+    "_postman_id": "75b4c64c-25b2-460f-ad5b-00c3f8fb1999",
+    "name": "Insurance Policy Request Service",
+    "description": "Collection para smoke tests do insurance-policy-request-service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "51204697",
+    "_collection_link": "https://go.postman.co/collection/51204697-75b4c64c-25b2-460f-ad5b-00c3f8fb1999?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "WireMock - Fraud Analysis",
+      "item": [
+        {
+          "name": "Fraud Analysis - REGULAR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{wiremockBaseUrl}}/fraud-analysis/11111111-1111-1111-1111-111111111111?customerId={{regularCustomerId}}",
+              "host": [
+                "{{wiremockBaseUrl}}"
+              ],
+              "path": [
+                "fraud-analysis",
+                "11111111-1111-1111-1111-111111111111"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{regularCustomerId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fraud Analysis - HIGH_RISK",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{wiremockBaseUrl}}/fraud-analysis/11111111-1111-1111-1111-111111111111?customerId={{highRiskCustomerId}}",
+              "host": [
+                "{{wiremockBaseUrl}}"
+              ],
+              "path": [
+                "fraud-analysis",
+                "11111111-1111-1111-1111-111111111111"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{highRiskCustomerId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fraud Analysis - PREFERRED",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{wiremockBaseUrl}}/fraud-analysis/11111111-1111-1111-1111-111111111111?customerId={{preferredCustomerId}}",
+              "host": [
+                "{{wiremockBaseUrl}}"
+              ],
+              "path": [
+                "fraud-analysis",
+                "11111111-1111-1111-1111-111111111111"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{preferredCustomerId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fraud Analysis - NO_INFORMATION",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{wiremockBaseUrl}}/fraud-analysis/11111111-1111-1111-1111-111111111111?customerId={{noInfoCustomerId}}",
+              "host": [
+                "{{wiremockBaseUrl}}"
+              ],
+              "path": [
+                "fraud-analysis",
+                "11111111-1111-1111-1111-111111111111"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{noInfoCustomerId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Policy Requests API",
+      "item": [
+        {
+          "name": "Create Policy Request - REGULAR",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('policyRequestId', json.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{regularCustomerId}}\",\n  \"productId\": 123,\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"MOBILE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 75.25,\n  \"insuredAmount\": 200000.0,\n  \"coverages\": {\n    \"Roubo\": 100000.0,\n    \"Perda Total\": 100000.0\n  },\n  \"assistances\": [\n    \"Guincho 24h\",\n    \"Chaveiro\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "policy-requests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Policy Request - HIGH_RISK",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('policyRequestId', json.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{highRiskCustomerId}}\",\n  \"productId\": 123,\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"MOBILE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 75.25,\n  \"insuredAmount\": 260000.0,\n  \"coverages\": {\n    \"Roubo\": 130000.0,\n    \"Perda Total\": 130000.0\n  },\n  \"assistances\": [\n    \"Guincho 24h\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "policy-requests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Policy Request - PREFERRED",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('policyRequestId', json.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{preferredCustomerId}}\",\n  \"productId\": 123,\n  \"category\": \"LIFE\",\n  \"salesChannel\": \"WEBSITE\",\n  \"paymentMethod\": \"PIX\",\n  \"totalMonthlyPremiumAmount\": 120.0,\n  \"insuredAmount\": 799999.99,\n  \"coverages\": {\n    \"Morte Natural\": 500000.0,\n    \"Morte Acidental\": 299999.99\n  },\n  \"assistances\": [\n    \"Assist\\u00eancia Funeral\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "policy-requests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Policy Request - NO_INFORMATION",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('policyRequestId', json.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{noInfoCustomerId}}\",\n  \"productId\": 123,\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"WHATSAPP\",\n  \"paymentMethod\": \"BOLETO\",\n  \"totalMonthlyPremiumAmount\": 55.0,\n  \"insuredAmount\": 80000.0,\n  \"coverages\": {\n    \"Roubo\": 40000.0,\n    \"Perda Total\": 40000.0\n  },\n  \"assistances\": [\n    \"Guincho 24h\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "policy-requests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Policy Request by Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/policy-requests/{{policyRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "policy-requests",
+                "{{policyRequestId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Policy Requests by Customer - REGULAR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/policy-requests?customerId={{regularCustomerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "policy-requests"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{regularCustomerId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Policy Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/policy-requests/{{policyRequestId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "policy-requests",
+                "{{policyRequestId}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "wiremockBaseUrl",
+      "value": "http://localhost:8089"
+    },
+    {
+      "key": "policyRequestId",
+      "value": ""
+    },
+    {
+      "key": "regularCustomerId",
+      "value": "22222222-2222-2222-2222-222222222222"
+    },
+    {
+      "key": "highRiskCustomerId",
+      "value": "33333333-3333-3333-3333-333333333333"
+    },
+    {
+      "key": "preferredCustomerId",
+      "value": "44444444-4444-4444-4444-444444444444"
+    },
+    {
+      "key": "noInfoCustomerId",
+      "value": "55555555-5555-5555-5555-555555555555"
+    }
+  ]
+}
