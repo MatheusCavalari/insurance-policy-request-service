@@ -1,6 +1,7 @@
 package br.com.matheus.insurance.domain.rule;
 
 import br.com.matheus.insurance.domain.enums.RiskClassification;
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -29,6 +30,6 @@ class RiskValidationStrategyFactoryTest {
     void should_throw_when_strategy_not_found() {
         RiskValidationStrategyFactory factory = new RiskValidationStrategyFactory(List.of());
 
-        assertThrows(IllegalArgumentException.class, () -> factory.get(RiskClassification.REGULAR));
+        assertThrows(ResourceNotFoundException.class, () -> factory.get(RiskClassification.REGULAR));
     }
 }

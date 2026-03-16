@@ -2,6 +2,7 @@ package br.com.matheus.insurance.infrastructure.persistence;
 
 import br.com.matheus.insurance.domain.enums.OutboxEventStatus;
 import br.com.matheus.insurance.domain.enums.OutboxEventType;
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 import br.com.matheus.insurance.domain.port.OutboxEventRepository;
 import br.com.matheus.insurance.infrastructure.persistence.entity.OutboxEventJpaEntity;
 import br.com.matheus.insurance.infrastructure.persistence.repository.SpringDataOutboxEventRepository;
@@ -58,7 +59,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
     @Override
     public void markPublished(UUID id, Instant publishedAt) {
         OutboxEventJpaEntity entity = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("outbox event not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("outbox event not found: " + id));
         entity.setStatus(OutboxEventStatus.PUBLISHED);
         entity.setPublishedAt(publishedAt);
         entity.setErrorMessage(null);
@@ -68,7 +69,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
     @Override
     public void markFailed(UUID id, String errorMessage) {
         OutboxEventJpaEntity entity = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("outbox event not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("outbox event not found: " + id));
         entity.setStatus(OutboxEventStatus.FAILED);
         entity.setErrorMessage(errorMessage);
         entity.setRetries(entity.getRetries() + 1);

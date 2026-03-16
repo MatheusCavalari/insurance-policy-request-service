@@ -1,6 +1,7 @@
 package br.com.matheus.insurance.domain.rule;
 
 import br.com.matheus.insurance.domain.enums.RiskClassification;
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class RiskValidationStrategyFactory {
         return strategies.stream()
                 .filter(strategy -> strategy.supports() == classification)
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "No validation strategy found for classification: " + classification
                 ));
     }
