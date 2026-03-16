@@ -260,9 +260,25 @@ curl http://localhost:8080/actuator/health
 curl http://localhost:8080/actuator/metrics
 ```
 
+## 8. Collections Postman
+
+Para facilitar a validação da solução, o repositório também inclui collections do Postman com os principais fluxos funcionais e de observabilidade.
+
+### Collections disponíveis
+
+- `postman/insurance-policy-request-service.postman_collection.json`  
+  Collection principal com os fluxos funcionais da API, incluindo criação de solicitação, consulta por id, consulta por customerId, cancelamento e cenários de validação do fluxo principal.
+
+- `postman/insurance-observability.postman_collection.json`  
+  Collection dedicada à observabilidade, com requests para healthchecks, métricas customizadas e endpoint Prometheus.
+
+### Observação
+
+As collections foram adicionadas ao repositório para tornar a execução e a validação mais simples para quem estiver executando a solução.
+
 ---
 
-## 8. Infraestrutura local
+## 9. Infraestrutura local
 
 O `docker-compose.yml` sobe os seguintes componentes:
 
@@ -273,7 +289,7 @@ O `docker-compose.yml` sobe os seguintes componentes:
 
 ---
 
-## 9. Ciclo de vida da solicitação
+## 10. Ciclo de vida da solicitação
 
 Estados suportados:
 
@@ -296,7 +312,7 @@ Resumo do fluxo:
 
 ---
 
-## 10. Regras por classificação de risco
+## 11. Regras por classificação de risco
 
 ### Cliente Regular (REGULAR)
 - vida ou residencial: até R$ 500.000,00
@@ -320,9 +336,9 @@ Resumo do fluxo:
 
 ---
 
-## 11. Endpoints REST
+## 12. Endpoints REST
 
-### 11.1 Criar solicitação
+### 12.1 Criar solicitação
 
 `POST /policy-requests`
 
@@ -355,7 +371,7 @@ Resposta esperada:
 }
 ```
 
-### 11.2 Consultar por id
+### 12.2 Consultar por id
 
 `GET /policy-requests/{requestId}`
 
@@ -363,7 +379,7 @@ Resposta esperada:
 curl http://localhost:8080/policy-requests/{requestId}
 ```
 
-### 11.3 Consultar por customerId
+### 12.3 Consultar por customerId
 
 `GET /policy-requests?customerId={customerId}`
 
@@ -371,7 +387,7 @@ curl http://localhost:8080/policy-requests/{requestId}
 curl "http://localhost:8080/policy-requests?customerId=22222222-2222-2222-2222-222222222222"
 ```
 
-### 11.4 Cancelar solicitação
+### 12.4 Cancelar solicitação
 
 `POST /policy-requests/{requestId}/cancel`
 
@@ -381,7 +397,7 @@ curl --request POST http://localhost:8080/policy-requests/{requestId}/cancel
 
 ---
 
-## 12. Integração com fraude
+## 13. Integração com fraude
 
 A classificação de risco é simulada pelo WireMock.
 
@@ -400,23 +416,23 @@ curl "http://localhost:8089/fraud-analysis/test-id?customerId=33333333-3333-3333
 
 ---
 
-## 13. Mensageria e eventos
+## 14. Mensageria e eventos
 
-### 13.1 Filas utilizadas
+### 14.1 Filas utilizadas
 
 - `payment-processed-queue`
 - `underwriting-processed-queue`
 - `policy-request-received-queue`
 - `policy-status-changed-queue`
 
-### 13.2 Método escolhido para testes manuais
+### 14.2 Método escolhido para testes manuais
 
 Para reproduzir os testes de mensageria de forma confiável no Windows, os payloads foram salvos em arquivos `.json` e enviados com:
 
 1. `docker cp` para dentro do container do LocalStack
 2. `awslocal sqs send-message --message-body file:///...`
 
-### 13.3 Exemplo de payload de pagamento aprovado
+### 14.3 Exemplo de payload de pagamento aprovado
 
 Arquivo `manual-tests/payment-approved.json`:
 
@@ -436,7 +452,7 @@ docker cp ./manual-tests/payment-approved.json insurance-localstack:/tmp/payment
 docker exec insurance-localstack awslocal sqs send-message   --queue-url http://localhost:4566/000000000000/payment-processed-queue   --message-body file:///tmp/payment-approved.json
 ```
 
-### 13.4 Exemplo de payload de pagamento negado
+### 14.4 Exemplo de payload de pagamento negado
 
 ```json
 {
@@ -447,7 +463,7 @@ docker exec insurance-localstack awslocal sqs send-message   --queue-url http://
 }
 ```
 
-### 13.5 Exemplo de payload de subscrição aprovada
+### 14.5 Exemplo de payload de subscrição aprovada
 
 ```json
 {
@@ -465,7 +481,7 @@ docker cp ./manual-tests/underwriting-approved.json insurance-localstack:/tmp/un
 docker exec insurance-localstack awslocal sqs send-message   --queue-url http://localhost:4566/000000000000/underwriting-processed-queue   --message-body file:///tmp/underwriting-approved.json
 ```
 
-### 13.6 Exemplo de payload de subscrição negada
+### 14.6 Exemplo de payload de subscrição negada
 
 ```json
 {
@@ -476,7 +492,7 @@ docker exec insurance-localstack awslocal sqs send-message   --queue-url http://
 }
 ```
 
-### 13.7 Fluxos testados manualmente
+### 14.7 Fluxos testados manualmente
 
 - REGULAR -> `PENDING`
 - HIGH_RISK acima do limite -> `REJECTED`
@@ -488,9 +504,9 @@ docker exec insurance-localstack awslocal sqs send-message   --queue-url http://
 
 ---
 
-## 14. Observabilidade
+## 15. Observabilidade
 
-### 14.1 Healthchecks
+### 15.1 Healthchecks
 
 ```bash
 curl http://localhost:8080/actuator/health
@@ -498,7 +514,7 @@ curl http://localhost:8080/actuator/health/outbox
 curl http://localhost:8080/actuator/health/sqsQueues
 ```
 
-### 14.2 Métricas
+### 15.2 Métricas
 
 ```bash
 curl http://localhost:8080/actuator/metrics
@@ -507,7 +523,7 @@ curl http://localhost:8080/actuator/metrics/insurance.outbox.failed
 curl http://localhost:8080/actuator/prometheus
 ```
 
-### 14.3 Logs
+### 15.3 Logs
 
 A aplicação adiciona `X-Correlation-Id` em cada request/resposta HTTP e propaga esse identificador para os logs usando MDC.
 
@@ -519,9 +535,9 @@ curl -i http://localhost:8080/actuator/health -H "X-Correlation-Id: demo-123"
 
 ---
 
-## 15. Testes
+## 16. Testes
 
-### 15.1 Unitários
+### 16.1 Unitários
 - máquina de estados
 - estratégias de risco
 - casos de uso
@@ -533,13 +549,13 @@ curl -i http://localhost:8080/actuator/health -H "X-Correlation-Id: demo-123"
 - health indicators
 - parser de eventos SQS
 
-### 15.2 Integração
+### 16.2 Integração
 - persistência com PostgreSQL via Testcontainers
 - repositórios principais
 - outbox
 - mensagens processadas
 
-### 15.3 Execução
+### 16.3 Execução
 
 Todos os testes:
 
@@ -558,11 +574,11 @@ Exemplos específicos:
 
 ---
 
-## 16. Validação dos fluxos
+## 17. Validação dos fluxos
 
 Esta seção resume o roteiro mínimo para validar os principais comportamentos da solução após subir a infraestrutura e a aplicação.
 
-### 16.1. Fluxo REGULAR até `PENDING`
+### 17.1. Fluxo REGULAR até `PENDING`
 
 Criar uma solicitação com `customerId` mapeado para cenário `REGULAR` no WireMock:
 
@@ -598,7 +614,7 @@ Resultado esperado:
 
 ---
 
-### 16.2. Fluxo HIGH_RISK até `REJECTED`
+### 17.2. Fluxo HIGH_RISK até `REJECTED`
 
 Criar uma solicitação com `customerId` mapeado para `HIGH_RISK` e valor acima do limite aceito:
 
@@ -633,13 +649,13 @@ Resultado esperado:
 
 ---
 
-### 16.3. Fluxo de aprovação com pagamento + subscrição
+### 17.3. Fluxo de aprovação com pagamento + subscrição
 
 Pré-condição:
 - criar uma solicitação REGULAR
 - aguardar até que ela esteja em `PENDING`
 
-#### 16.3.1 Pagamento aprovado
+#### 17.3.1 Pagamento aprovado
 
 Arquivo `payment-approved.json`:
 
@@ -659,7 +675,7 @@ docker cp .\manual-tests\payment-approved.json insurance-localstack:/tmp/payment
 docker exec insurance-localstack awslocal sqs send-message --queue-url http://localhost:4566/000000000000/payment-processed-queue --message-body file:///tmp/payment-approved.json
 ```
 
-#### 16.3.2 Subscrição aprovada
+#### 17.3.2 Subscrição aprovada
 
 Arquivo `underwriting-approved.json`:
 
@@ -690,7 +706,7 @@ Resultado esperado:
 
 ---
 
-### 16.4. Fluxo de cancelamento
+### 17.4. Fluxo de cancelamento
 
 Criar uma nova solicitação e cancelar antes da aprovação final:
 
@@ -709,7 +725,7 @@ Resultado esperado:
 
 ---
 
-### 16.5. Healthchecks e métricas
+### 17.5. Healthchecks e métricas
 
 #### Health geral
 
@@ -745,7 +761,7 @@ Resultado esperado:
 
 ---
 
-## 17. Melhorias futuras
+## 18. Melhorias futuras
 
 - tracing distribuído
 - dashboards Grafana/Prometheus
@@ -755,6 +771,6 @@ Resultado esperado:
 
 ---
 
-## 18. Conclusão
+## 19. Conclusão
 
 A solução foi construída com foco em clareza arquitetural, testabilidade, observabilidade e reprodutibilidade. O projeto entrega o fluxo de ponta a ponta do serviço de solicitações de apólice, cobrindo criação, validação por fraude, processamento assíncrono, cancelamento, publicação de eventos e documentação de execução e demonstração.
