@@ -1,5 +1,6 @@
 package br.com.matheus.insurance.application.service;
 
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
 import br.com.matheus.insurance.support.PolicyRequestTestFactory;
@@ -37,6 +38,6 @@ class GetPolicyRequestByIdServiceTest {
 
         when(repository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> service.execute(id));
+        assertThrows(ResourceNotFoundException.class, () -> service.execute(id));
     }
 }

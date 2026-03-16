@@ -1,6 +1,7 @@
 package br.com.matheus.insurance.application.service;
 
 import br.com.matheus.insurance.application.usecase.AnalyzePolicyRequestUseCase;
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 import br.com.matheus.insurance.domain.model.FraudAnalysis;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.FraudAnalysisGateway;
@@ -35,7 +36,7 @@ public class AnalyzePolicyRequestService implements AnalyzePolicyRequestUseCase 
     @Override
     public void execute(UUID policyRequestId) {
         PolicyRequest policyRequest = repository.findById(policyRequestId)
-                .orElseThrow(() -> new IllegalArgumentException("policy request not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("policy request not found"));
 
         if (policyRequest.isFinalStatus()) {
             return;

@@ -1,6 +1,7 @@
 package br.com.matheus.insurance.application.service;
 
 import br.com.matheus.insurance.application.usecase.GetPolicyRequestByIdUseCase;
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
 
@@ -17,6 +18,6 @@ public class GetPolicyRequestByIdService implements GetPolicyRequestByIdUseCase 
     @Override
     public PolicyRequest execute(UUID id) {
         return repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("policy request not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("policy request not found"));
     }
 }

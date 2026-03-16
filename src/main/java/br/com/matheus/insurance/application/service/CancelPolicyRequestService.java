@@ -2,6 +2,7 @@ package br.com.matheus.insurance.application.service;
 
 import br.com.matheus.insurance.application.usecase.CancelPolicyRequestUseCase;
 import br.com.matheus.insurance.domain.enums.PolicyRequestStatus;
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.PolicyRequestRepository;
 import br.com.matheus.insurance.infrastructure.messaging.OutboxEventFactory;
@@ -25,7 +26,7 @@ public class CancelPolicyRequestService implements CancelPolicyRequestUseCase {
     @Override
     public void execute(UUID policyRequestId) {
         PolicyRequest policyRequest = repository.findById(policyRequestId)
-                .orElseThrow(() -> new IllegalArgumentException("policy request not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("policy request not found"));
 
         if (policyRequest.getStatus() == PolicyRequestStatus.APPROVED
                 || policyRequest.getStatus() == PolicyRequestStatus.REJECTED) {

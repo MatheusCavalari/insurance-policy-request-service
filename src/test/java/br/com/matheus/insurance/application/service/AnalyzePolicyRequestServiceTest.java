@@ -3,6 +3,7 @@ package br.com.matheus.insurance.application.service;
 import br.com.matheus.insurance.domain.enums.PolicyCategory;
 import br.com.matheus.insurance.domain.enums.PolicyRequestStatus;
 import br.com.matheus.insurance.domain.enums.RiskClassification;
+import br.com.matheus.insurance.domain.exception.ResourceNotFoundException;
 import br.com.matheus.insurance.domain.model.FraudAnalysis;
 import br.com.matheus.insurance.domain.model.PolicyRequest;
 import br.com.matheus.insurance.domain.port.FraudAnalysisGateway;
@@ -142,7 +143,7 @@ class AnalyzePolicyRequestServiceTest {
 
         when(repository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> service.execute(id));
+        assertThrows(ResourceNotFoundException.class, () -> service.execute(id));
 
         verify(repository, never()).save(any());
         verifyNoInteractions(fraudAnalysisGateway);
