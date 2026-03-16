@@ -10,4 +10,5 @@ import java.util.UUID;
 public interface SpringDataOutboxEventRepository extends JpaRepository<OutboxEventJpaEntity, UUID> {
 
     List<OutboxEventJpaEntity> findTop50ByStatusOrderByCreatedAtAsc(OutboxEventStatus status);
+    long countByStatus(OutboxEventStatus status);
 }

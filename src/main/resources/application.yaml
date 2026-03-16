@@ -30,11 +30,18 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
 
 logging:
+  pattern:
+    level: "%5p [corr:%X{correlationId:-n/a}]"
   level:
     org.springframework: INFO
     org.hibernate.SQL: INFO
+    br.com.matheus.insurance: INFO
+    io.awspring.cloud.sqs: INFO
 
 fraud:
   base-url: http://localhost:8089
@@ -50,3 +57,7 @@ app:
       underwriting-queue: underwriting-processed-queue
       policy-request-received-queue: policy-request-received-queue
       policy-status-changed-queue: policy-status-changed-queue
+
+  health:
+    outbox:
+      pending-threshold: 100
