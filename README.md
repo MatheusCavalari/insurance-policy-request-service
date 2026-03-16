@@ -228,13 +228,13 @@ A API de fraude não foi implementada como serviço real. O comportamento foi si
 
 ### 7.2 Subir infraestrutura local
 
-```bash
+```cmd
 docker compose up -d postgres localstack wiremock
 ```
 
 ### 7.3 Criar filas no LocalStack
 
-```bash
+```cmd
 docker exec insurance-localstack awslocal sqs create-queue --queue-name payment-processed-queue
 docker exec insurance-localstack awslocal sqs create-queue --queue-name underwriting-processed-queue
 docker exec insurance-localstack awslocal sqs create-queue --queue-name policy-request-received-queue
@@ -298,25 +298,25 @@ Resumo do fluxo:
 
 ## 10. Regras por classificação de risco
 
-### REGULAR
-- vida ou residencial: até `500000`
-- auto: até `350000`
-- demais categorias: até `255000`
+### Cliente Regular (REGULAR)
+- vida ou residencial: até R$ 500.000,00
+- auto: até R$ 350.000,00
+- demais categorias: até R$ 255.000,00
 
-### HIGH_RISK
-- auto: até `250000`
-- residencial: até `150000`
-- demais categorias: até `125000`
+### Cliente Alto Risco (HIGH_RISK)
+- auto: até R$ 250.000,00
+- residencial: até R$ 150.000,00
+- demais categorias: até R$ 125.000,00
 
-### PREFERRED
-- vida: menor que `800000`
-- auto e residencial: menor que `450000`
-- demais categorias: até `375000`
+### Cliente Preferencial (PREFERRED)
+- vida: menor que R$ 800.000,00
+- auto e residencial: menor que R$ 450.000,00
+- demais categorias: até R$ 375.000,00
 
-### NO_INFORMATION
-- vida ou residencial: até `200000`
-- auto: até `75000`
-- demais categorias: até `55000`
+### Cliente Sem Informação (NO_INFORMATION)
+- vida ou residencial: até R$ 200.000,00
+- auto: até R$ 75.000,00
+- demais categorias: até R$ 55.000,00
 
 ---
 
@@ -559,6 +559,189 @@ Exemplos específicos:
 ---
 
 ## 16. Validação dos fluxos
+
+Esta seção resume o roteiro mínimo para validar os principais comportamentos da solução após subir a infraestrutura e a aplicação.
+
+### 16.1. Fluxo REGULAR até `PENDING`
+
+Criar uma solicitação com `customerId` mapeado para cenário `REGULAR` no WireMock:
+
+```bash
+curl --request POST \
+  --url http://localhost:8080/policy-requests \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "customerId": "22222222-2222-2222-2222-222222222222",
+    "productId": 123,
+    "category": "AUTO",
+    "salesChannel": "MOBILE",
+    "paymentMethod": "CREDIT_CARD",
+    "totalMonthlyPremiumAmount": 75.25,
+    "insuredAmount": 200000.00,
+    "coverages": {
+      "Roubo": 100000.00,
+      "Perda Total": 100000.00
+    },
+    "assistances": ["Guincho 24h", "Chaveiro"]
+  }'
+```
+
+Consultar por id após alguns segundos:
+
+```bash
+curl http://localhost:8080/policy-requests/{requestId}
+```
+
+Resultado esperado:
+- criação retorna `RECEIVED`
+- após o processamento assíncrono da fraude, a solicitação evolui para `PENDING`
+
+---
+
+### 16.2. Fluxo HIGH_RISK até `REJECTED`
+
+Criar uma solicitação com `customerId` mapeado para `HIGH_RISK` e valor acima do limite aceito:
+
+```bash
+curl --request POST \
+  --url http://localhost:8080/policy-requests \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "customerId": "33333333-3333-3333-3333-333333333333",
+    "productId": 123,
+    "category": "AUTO",
+    "salesChannel": "MOBILE",
+    "paymentMethod": "CREDIT_CARD",
+    "totalMonthlyPremiumAmount": 75.25,
+    "insuredAmount": 260000.00,
+    "coverages": {
+      "Roubo": 130000.00,
+      "Perda Total": 130000.00
+    },
+    "assistances": ["Guincho 24h"]
+  }'
+```
+
+Consultar por id:
+
+```bash
+curl http://localhost:8080/policy-requests/{requestId}
+```
+
+Resultado esperado:
+- a solicitação deve terminar em `REJECTED`
+
+---
+
+### 16.3. Fluxo de aprovação com pagamento + subscrição
+
+Pré-condição:
+- criar uma solicitação REGULAR
+- aguardar até que ela esteja em `PENDING`
+
+#### 16.3.1 Pagamento aprovado
+
+Arquivo `payment-approved.json`:
+
+```json
+{
+  "eventId": "33333333-3333-3333-3333-333333333333",
+  "requestId": "REQUEST_ID",
+  "status": "APPROVED",
+  "occurredAt": "2026-03-15T04:20:00Z"
+}
+```
+
+Envio:
+
+```bash
+docker cp .\manual-tests\payment-approved.json insurance-localstack:/tmp/payment-approved.json
+docker exec insurance-localstack awslocal sqs send-message --queue-url http://localhost:4566/000000000000/payment-processed-queue --message-body file:///tmp/payment-approved.json
+```
+
+#### 16.3.2 Subscrição aprovada
+
+Arquivo `underwriting-approved.json`:
+
+```json
+{
+  "eventId": "44444444-4444-4444-4444-444444444444",
+  "requestId": "REQUEST_ID",
+  "status": "APPROVED",
+  "occurredAt": "2026-03-15T04:21:00Z"
+}
+```
+
+Envio:
+
+```bash
+docker cp ./manual-tests/underwriting-approved.json insurance-localstack:/tmp/underwriting-approved.json
+docker exec insurance-localstack awslocal sqs send-message --queue-url http://localhost:4566/000000000000/underwriting-processed-queue --message-body file:///tmp/underwriting-approved.json
+```
+
+Consultar por id:
+
+```bash
+curl http://localhost:8080/policy-requests/{requestId}
+```
+
+Resultado esperado:
+- após os dois eventos aprovados, a solicitação deve ficar em `APPROVED`
+
+---
+
+### 16.4. Fluxo de cancelamento
+
+Criar uma nova solicitação e cancelar antes da aprovação final:
+
+```bash
+curl --request POST http://localhost:8080/policy-requests/{requestId}/cancel
+```
+
+Consultar por id:
+
+```bash
+curl http://localhost:8080/policy-requests/{requestId}
+```
+
+Resultado esperado:
+- a solicitação deve ficar em `CANCELED`
+
+---
+
+### 16.5. Healthchecks e métricas
+
+#### Health geral
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+#### Health do outbox
+
+```bash
+curl http://localhost:8080/actuator/health/outbox
+```
+
+#### Health das filas SQS
+
+```bash
+curl http://localhost:8080/actuator/health/sqsQueues
+```
+
+#### Métricas expostas
+
+```bash
+curl http://localhost:8080/actuator/metrics
+curl http://localhost:8080/actuator/metrics/insurance.outbox.pending
+curl http://localhost:8080/actuator/metrics/insurance.outbox.failed
+curl http://localhost:8080/actuator/prometheus
+```
+
+Resultado esperado:
+- health geral em `UP`
+- `outbox` e `sqsQueues` em `UP`
+- métricas customizadas do outbox disponíveis no actuator
 
 ---
 
