@@ -1,3 +1,63 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: insurance-policy-request-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/insurance
+    username: insurance_user
+    password: insurance_pass
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  pattern:
+    level: "%5p [corr:%X{correlationId:-n/a}]"
+  level:
+    org.springframework: INFO
+    org.hibernate.SQL: INFO
+    br.com.matheus.insurance: INFO
+    io.awspring.cloud.sqs: INFO
+
+fraud:
+  base-url: http://localhost:8089
+
+app:
+  aws:
+    endpoint: http://localhost:4566
+    region: us-east-1
+    access-key: test
+    secret-key: test
+    sqs:
+      payment-queue: payment-processed-queue
+      underwriting-queue: underwriting-processed-queue
+      policy-request-received-queue: policy-request-received-queue
+      policy-status-changed-queue: policy-status-changed-queue
+
+  health:
+    outbox:
+      pending-threshold: 100

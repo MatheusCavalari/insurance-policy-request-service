@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/insurance
+    username: insurance_user
+    password: insurance_pass
+
+  jpa:
+    show-sql: true
+
+fraud:
+  base-url: http://wiremock:8080
+
+app:
+  aws:
+    endpoint: http://localstack:4566
+    region: us-east-1
+    access-key: test
+    secret-key: test
+    sqs:
+      underwriting-queue: underwriting-processed-queue
+      payment-queue: payment-processed-queue
+      policy-request-received-queue: policy-request-received-queue
+      policy-status-changed-queue: policy-status-changed-queue

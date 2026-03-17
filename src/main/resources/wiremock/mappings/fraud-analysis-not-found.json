@@ -1,0 +1,16 @@
+{
+  "priority": 10,
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/fraud-analysis/.*"
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "message": "No fraud analysis stub found for the provided customerId"
+    }
+  }
+}
