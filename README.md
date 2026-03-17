@@ -226,13 +226,17 @@ A API de fraude não foi implementada como serviço real. O comportamento foi si
 - PowerShell ou terminal compatível
 - Curl, Postman ou Insomnia
 
-### 7.2 Subir infraestrutura local
+### 7.2 Opção 1 — Rodar a aplicação localmente
+
+Nesta opção, o banco, o broker e o mock server sobem com Docker Compose, e a aplicação roda localmente via Maven Wrapper.
+
+#### 7.2.1 Subir infraestrutura
 
 ```cmd
 docker compose up -d postgres localstack wiremock
 ```
 
-### 7.3 Criar filas no LocalStack
+#### 7.2.2 Criar filas no LocalStack
 
 ```cmd
 docker exec insurance-localstack awslocal sqs create-queue --queue-name payment-processed-queue
@@ -247,18 +251,71 @@ Opcional: listar filas
 docker exec insurance-localstack awslocal sqs list-queues
 ```
 
-### 7.4 Subir a aplicação
+#### 7.2.3 Subir a aplicação
 
 ```cmd
 .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-### 7.5 Smoke test inicial
+#### 7.2.4 Smoke test inicial
 
 ```cmd
 curl http://localhost:8080/actuator/health
 curl http://localhost:8080/actuator/metrics
 ```
+
+---
+
+### 7.3 Opção 2 — Rodar tudo com Docker Compose
+
+Nesta opção, toda a solução sobe via Docker Compose, incluindo a aplicação.
+
+#### 7.3.1 Subir todos os serviços
+
+```cmd
+docker compose up -d
+```
+
+#### 7.3.2 Criar filas no LocalStack
+
+```cmd
+docker exec insurance-localstack awslocal sqs create-queue --queue-name payment-processed-queue
+docker exec insurance-localstack awslocal sqs create-queue --queue-name underwriting-processed-queue
+docker exec insurance-localstack awslocal sqs create-queue --queue-name policy-request-received-queue
+docker exec insurance-localstack awslocal sqs create-queue --queue-name policy-status-changed-queue
+```
+
+Opcional: listar filas
+
+```cmd
+docker exec insurance-localstack awslocal sqs list-queues
+```
+
+#### 7.3.3 Smoke test inicial
+
+```cmd
+curl http://localhost:8080/actuator/health
+curl http://localhost:8080/actuator/metrics
+```
+
+#### 7.3.4 Acompanhar logs
+
+```cmd
+docker compose logs -f
+```
+
+#### 7.3.5 Observação
+
+O Docker Compose sobe o LocalStack, mas a criação das filas foi mantida de forma explícita para garantir uma execução local determinística e reproduzível.
+
+---
+
+### 7.4 Parar os serviços
+
+```cmd
+docker compose down
+```
+
 
 ## 8. Collections Postman
 
